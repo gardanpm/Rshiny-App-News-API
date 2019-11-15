@@ -2,7 +2,7 @@
 
 ## Introduction
 
-(News API)[https://newsapi.org/] gives you access to breaking news headlines 
+[News API](https://newsapi.org/) gives you access to breaking news headlines 
 and historical articles from over 30,000 news sources. The purpose of this exam 
 is to use their API to create an RShiny news deck (dashboard). A free account 
 with News API will grant you 500 requests per day and allow you to query 
