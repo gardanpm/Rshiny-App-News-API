@@ -7,7 +7,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r code app}
+```{r library}
 ## app.R ##
 
 # Library
@@ -17,7 +17,10 @@ library(shinythemes)
 library(tidyverse)
 library(DT)
 library(jsonlite)
+```
 
+
+```{r code app}
 # UI function
 ui <- dashboardPage( skin = "red",
   dashboardHeader(title = "My News Feed!"),
@@ -187,18 +190,18 @@ h5('Thank you!')
                                ),
       "Please, if you prefer to use your own API Key, enter it below",
           textInput("API_Key3", "API Key:b9e5bdd7d30448d0aae8d0c69bf1f5a1",
-                    value ='b9e5bdd7d30448d0aae8d0c69bf1f5a1'),
+          value ='b9e5bdd7d30448d0aae8d0c69bf1f5a1'),
           actionButton("do3", "Submit")
       )
     ))
   )
 )
 )
-##################################################################### 
-# Server function
-server <- function(input, output) { 
-  # https://stackoverflow.com/questions/38950005/how-to-manipulate-null-elements-in-a-nested-list
-  # Function to make NULL from list go to NA
+```
+
+
+```{r functions}
+# null to na
 replace_null <- function(x) {
   lapply(x, function(x) {
     if (is.list(x)){
@@ -208,12 +211,8 @@ replace_null <- function(x) {
       } 
     })
 }
-  observeEvent(input$tabs, {
-    
-    # Sources
-    if(input$tabs == "Sources"){
-    observeEvent(input$do, {
-      # get function
+
+# get function
       # we se default value for parameters
       get_sources <- function(category="",API_Key=
                                 'b9e5bdd7d30448d0aae8d0c69bf1f5a1'){
@@ -242,19 +241,9 @@ replace_null <- function(x) {
  return(dat)
     }
       }
-#   #     #     #     #     #     #     #     #     #     #       #
-# Output
-  output$SourcesPanel <- DT::renderDataTable({
-    DT::datatable(get_sources(category=input$category, API_Key=input$API_Key1) %>%
-      select(name, description, category), escape = FALSE) 
-  })
-    })
-    }
-#################################################################    
-  # Top Headlines  
-  else if(input$tabs == "TopHeadlines"){
-    observeEvent(input$do2, {
-      # get function
+      
+      
+# get function
       get_headlines <- function(sources=c('cnn','fox-news',
                                       'the-wall-street-journal','reuters'),
                               q="",pageSize="", page="",
@@ -285,22 +274,8 @@ replace_null <- function(x) {
         return(dat)
       }
       }
-#   #     #     #     #     #     #     #     #     #     #       #
-    # Output
-    output$HeadlinesPanel <- DT::renderDataTable({
-      DT::datatable(get_headlines(q=input$q2, sources=input$Sources2,
-                    pageSize=input$pageSize2, page=input$page2,
-                    apiKey=input$API_Key2) %>% 
-                    select(Name, Author, Title, Date, Time), 
-                    escape = FALSE)})
-    })
-  }
-#####################################################################    
-    # Historic
-   else if(input$tabs == "Historic"){
-     observeEvent(input$do3, {
-       
-       # Get function
+      
+ # Get function
       get_historic <- function(q="", q_title="",sources="",
                          from="2019-01-01",to=Sys.Date(),
                          sort_by="",page_size="", page="",
@@ -335,6 +310,50 @@ replace_null <- function(x) {
  return(title)
       }
     }
+```
+
+
+
+```{r servercode app}
+server <- function(input, output) { 
+  # https://stackoverflow.com/questions/38950005/how-to-manipulate-null-elements-in-a-nested-list
+  # Function to make NULL from list go to NA
+
+  observeEvent(input$tabs, {
+    
+    # Sources
+    if(input$tabs == "Sources"){
+    observeEvent(input$do, {
+      
+#   #     #     #     #     #     #     #     #     #     #       #
+# Output
+  output$SourcesPanel <- DT::renderDataTable({
+    DT::datatable(get_sources(category=input$category, API_Key=input$API_Key1) %>%
+      select(name, description, category), escape = FALSE) 
+  })
+    })
+    }
+#################################################################    
+  # Top Headlines  
+  else if(input$tabs == "TopHeadlines"){
+    observeEvent(input$do2, {
+      
+#   #     #     #     #     #     #     #     #     #     #       #
+    # Output
+    output$HeadlinesPanel <- DT::renderDataTable({
+      DT::datatable(get_headlines(q=input$q2, sources=input$Sources2,
+                    pageSize=input$pageSize2, page=input$page2,
+                    apiKey=input$API_Key2) %>% 
+                    select(Name, Author, Title, Date, Time), 
+                    escape = FALSE)})
+    })
+  }
+#####################################################################    
+    # Historic
+   else if(input$tabs == "Historic"){
+     observeEvent(input$do3, {
+       
+      
 #   #     #     #     #     #     #     #     #     #     #       #   
      # Output
     output$HistoricPanel <- DT::renderDataTable({
@@ -350,7 +369,10 @@ replace_null <- function(x) {
   }
   })
 }
+```
 
+
+```{r calling shiny app}
 # Calling Shiny App
 shinyApp(ui, server)
     
