@@ -16,6 +16,7 @@ library(shinydashboard)
 library(shinythemes)
 library(tidyverse)
 library(DT)
+library(jsonlite)
 
 # UI function
 ui <- dashboardPage( skin = "red",
