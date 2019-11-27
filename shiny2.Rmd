@@ -1,0 +1,357 @@
+---
+title: "shiny app"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r code app}
+## app.R ##
+
+# Library
+library(shiny)
+library(shinydashboard)
+library(shinythemes)
+library(tidyverse)
+library(DT)
+
+# UI function
+ui <- dashboardPage( skin = "red",
+  dashboardHeader(title = "My News Feed!"),
+  dashboardSidebar(
+    sidebarMenu(
+      id = "tabs",
+      
+      menuItem("Instructions", tabName="Instructions", 
+               icon = icon("Instructions")),
+      
+      menuItem("Sources", icon = icon("th"), tabName = "Sources"),
+      
+      menuItem("Top Headlines", icon = icon("th"),
+             tabName = "TopHeadlines"),
+  
+      menuItem("Historic", icon = icon("th"), tabName = "Historic")  
+    
+  ),
+  textOutput("res")
+  ),
+  dashboardBody(
+    tags$head(
+    tags$style(HTML('#do{background-color:red}',
+                    '#do{border-color:red}',
+                    '#do{color: #ffffff}',
+                    '#do2{background-color:red}',
+                    '#do2{border-color:red}',
+                    '#do2{color: #ffffff}',
+                    '#do3{background-color:red}',
+                    '#do3{border-color:red}',
+                    '#do3{color: #ffffff}'))
+  ),
+    
+    tags$style(HTML("
+                    .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing, .dataTables_wrapper .dataTables_paginate {
+                    color: #ffffff;
+                    }
+
+                    thead {
+                    color: #ffffff;
+                    }
+
+                     tbody {
+                    color: #000000;
+                    }
+
+                   "
+
+
+                    )),
+    
+    tabItems(
+      # Intro tab
+      tabItem(tabName = "Instructions", h1("Introduction:"),
+       h3("Welcome to our News Feed Shiny App!"),
+       
+p("On this App, you will be able to explore a wide diversity of the News Feed in the United-States. You will be able to access articles and head lines of this past month from CNN, Fox News, The Wall Street Journal and Reuters. Three customizable feeds will be at your disposal: Sources, Top Headlines and a more global Platform regrouping everything."),
+
+h3('Sources:'),
+p('The Sources will let you look for different categories such as “business” or “sports. It will return to you information such as the name of the author, the website or a brief description of the article.'),
+
+h3('Top Headlines:'),
+p('This platform is designed to only output the most important recent headlines. You will be able to search for specific key words, sources (between the four at your disposal), page size and page number. It will return to you a wide range of information such as the title of the article or a link to it’s full content.'),
+
+h3('Historic:'),
+p('We named this tab this way as it will allow you to explore every articles published by our four sources in the past month. On this tab, in addition to look for key words, you will be able to specify a key word in the title, a date range as well as a sorting option for your data . It returns the same output as the Top Headlines tab.'),
+
+p('We hope hope that you enjoy our App!'),
+
+h5('Thank you!')
+      ),
+  
+#   #     #     #     #     #     #     #     #     #     #       #      
+      # Sources tab
+      tabItem(tabName ="Sources",h2("Get Sources"),
+      fluidRow(
+        box(title = 'Sources Returned',width = 9,background = "black",
+            solidHeader = TRUE, dataTableOutput("SourcesPanel")),
+        
+        box(title = "Inputs",width = 3,background = "black", 
+            collapsible = TRUE,
+            "Please select the desired inputs", 
+            selectInput("category", "Category:", multiple = FALSE,
+              choices = c("general", "business", "sports", 'entertainment',               'health','science','technology', ""),
+              selected = ""), 
+          "Please, if you prefer to use your own API Key, enter it below", 
+            textInput("API_Key1", "API Key: b9e5bdd7d30448d0aae8d0c69bf1f5a1", value =
+                        'b9e5bdd7d30448d0aae8d0c69bf1f5a1'),
+            actionButton("do", "Submit")
+        )
+    )),
+  
+#   #     #     #     #     #     #     #     #     #     #       #    
+    
+      # Top Headlines tab
+      tabItem(tabName ="TopHeadlines",h2("Get Top-Headlines"), 
+      fluidRow(
+        box(title="Headlines Returned", width = 9,background = "black",
+            solidHeader = TRUE, dataTableOutput("HeadlinesPanel")),
+        
+        box(title="Inputs",width = 3, background = "black", 
+            collapsible = TRUE,"Please select the desired inputs",
+            textInput(inputId = "q2",label = "Key Word",value = ""),
+            numericInput(inputId = "page2",
+                             label= "Number of Pages",
+                             min=1,max=10, value=1),
+            sliderInput(inputId = "pageSize2",
+                             label = "Articles per Page",
+                             min=1, max=100, value = 20),
+            checkboxGroupInput("Sources2", label = h3("Sources"),
+                               choiceNames = c("CNN", 
+                                              "Fox News", 
+                                              "The Wall Street Journal",
+                                              'Reuters'),
+                               choiceValues =  c('cnn','fox-news',
+                               'the-wall-street-journal','reuters'),
+                               selected = list('cnn','fox-news',
+                               'the-wall-street-journal','reuters'),
+                               ),
+  "Please, if you prefer to use your own API Key, enter it below",
+  
+            textInput("API_Key2", 
+                      "API Key: b9e5bdd7d30448d0aae8d0c69bf1f5a1", 
+                      value ='b9e5bdd7d30448d0aae8d0c69bf1f5a1'),
+            actionButton("do2", "Submit")
+        )
+     )),
+ 
+#   #     #     #     #     #     #     #     #     #     #       #   
+  #Historic tab
+  tabItem(tabName ="Historic",h2("Get Historic"),
+    fluidRow(
+      box(title= "Your Historic Data", width = 9,background = 'black',
+          solidHeader = TRUE,dataTableOutput("HistoricPanel")),
+      
+      box(title = "Inputs", width = 3, background = "black", 
+          collapsible = TRUE,
+          "Please select the desired inputs",
+          dateRangeInput(inputId = "dates",
+                         label = "Dates to pull articles from:",
+                         start = Sys.Date()-30),
+                # textbox
+          textInput(inputId = "q3",label = "Key Word:",
+                    value = ""),
+                # textbox
+          textInput(inputId = "qInTitle",label = "Key Word in Title:",
+                    value = ""),
+          numericInput(inputId = "page3",label= "Number of Pages:",
+                       min=1,max=10, value=1),
+          sliderInput(inputId = "pageSize3",
+                      label = "Number of Articles per Page:",
+                      min=1, max=100, value = 20),
+          selectInput(inputId = "sortBy",
+                            label = "Sort By:",
+                            choices = c("publishedAt", "popularity",
+                                        "relevancy")
+          ),
+          checkboxGroupInput("Sources3", label = h3("Sources"),
+                               choiceNames = list("CNN", 
+                                              "Fox News", 
+                                              "The Wall Street Journal",
+                                              'Reuters'),
+                               choiceValues =  list('cnn','fox-news',
+                               'the-wall-street-journal','reuters'),
+                               selected = list('cnn','fox-news',
+                               'the-wall-street-journal','reuters'),
+                               ),
+      "Please, if you prefer to use your own API Key, enter it below",
+          textInput("API_Key3", "API Key:b9e5bdd7d30448d0aae8d0c69bf1f5a1",
+                    value ='b9e5bdd7d30448d0aae8d0c69bf1f5a1'),
+          actionButton("do3", "Submit")
+      )
+    ))
+  )
+)
+)
+##################################################################### 
+# Server function
+server <- function(input, output) { 
+  # https://stackoverflow.com/questions/38950005/how-to-manipulate-null-elements-in-a-nested-list
+  # Function to make NULL from list go to NA
+replace_null <- function(x) {
+  lapply(x, function(x) {
+    if (is.list(x)){
+      replace_null(x)
+      } else{
+        if(is.null(x)) NA else(x)
+      } 
+    })
+}
+  observeEvent(input$tabs, {
+    
+    # Sources
+    if(input$tabs == "Sources"){
+    observeEvent(input$do, {
+      # get function
+      # we se default value for parameters
+      get_sources <- function(category="",API_Key=
+                                'b9e5bdd7d30448d0aae8d0c69bf1f5a1'){
+        a <- paste('https://newsapi.org/v2/sources?category=', 
+                   category, sep = "")
+        b <- paste('&language=en&country=us&apiKey=', API_Key, sep = "")
+        request <- paste(a,b,sep="")
+        getsources <- read_json(request)
+        if(length(getsources[['sources']]) == 0){
+        print('Sorry, your research did not provide any result. 
+          Please modify your search parameters')
+    }
+        else{sources <- getsources[['sources']]
+      sources <- replace_null(sources)
+      dat <- matrix(NA,length(sources), 7)
+      colnames(dat) <- names(sources[[1]])
+  
+      for(i in 1:length(sources)){
+        dat[i,] <- unlist(sources[[i]])
+      }
+      dat <- dat %>% data.frame() %>% 
+            filter(name %in% c("CNN", "Fox News", 
+                               "The Wall Street Journal", "Reuters"))
+      dat$name <- paste0("<a href='",dat$url,"' target='_blank'>",dat$name,"</a>")
+      # Added hyperlink from original function
+ return(dat)
+    }
+      }
+#   #     #     #     #     #     #     #     #     #     #       #
+# Output
+  output$SourcesPanel <- DT::renderDataTable({
+    DT::datatable(get_sources(category=input$category, API_Key=input$API_Key1) %>%
+      select(name, description, category), escape = FALSE) 
+  })
+    })
+    }
+#################################################################    
+  # Top Headlines  
+  else if(input$tabs == "TopHeadlines"){
+    observeEvent(input$do2, {
+      # get function
+      get_headlines <- function(sources=c('cnn','fox-news',
+                                      'the-wall-street-journal','reuters'),
+                              q="",pageSize="", page="",
+                              apiKey='b9e5bdd7d30448d0aae8d0c69bf1f5a1'){
+      req<- sprintf(
+        'https://newsapi.org/v2/top-headlines?country=us&q=%s&pageSize=%s&page=%s&apiKey=%s',
+        q,pageSize,page,apiKey)
+      read_headlines <- read_json(req)
+      if(read_headlines[['totalResults']] == 0){
+        print('Sorry, your research did not provide any result. Please modify your search parameters')
+      }
+      else{
+        top_headlines <- read_headlines[['articles']]
+        top_headlines <- replace_null(top_headlines)
+        dat <- matrix(NA,length(top_headlines), 9)
+  
+        for(i in 1:length(top_headlines)){
+          dat[i,] <- unlist(top_headlines[[i]])
+       }
+        colnames(dat) <- c("ID","Name","Author","Title","Description",
+                            "URL","URLToImage","Date","Content")
+       dat <- dat %>% data.frame() %>% filter(ID %in% sources) %>%
+         separate(Date, sep = "T", into = c("Date", "Time2")) %>%
+         mutate(Time = str_extract(Time2, "\\d{2}:\\d{2}:\\d{2}")) %>%
+         select(-Time2)
+        dat$Title <- paste0("<a href='",dat$URL,"' target='_blank'>",dat$Title,"</a>") 
+        # Added hyperlink from original function
+        return(dat)
+      }
+      }
+#   #     #     #     #     #     #     #     #     #     #       #
+    # Output
+    output$HeadlinesPanel <- DT::renderDataTable({
+      DT::datatable(get_headlines(q=input$q2, sources=input$Sources2,
+                    pageSize=input$pageSize2, page=input$page2,
+                    apiKey=input$API_Key2) %>% 
+                    select(Name, Author, Title, Date, Time), 
+                    escape = FALSE)})
+    })
+  }
+#####################################################################    
+    # Historic
+   else if(input$tabs == "Historic"){
+     observeEvent(input$do3, {
+       
+       # Get function
+      get_historic <- function(q="", q_title="",sources="",
+                         from="2019-01-01",to=Sys.Date(),
+                         sort_by="",page_size="", page="",
+                         api_key='b9e5bdd7d30448d0aae8d0c69bf1f5a1'){
+      mysources<- paste(sources,collapse=",")
+      req <- sprintf('https://newsapi.org/v2/everything?sources=%s&language=en&q=%s&qInTitle=%s&pageSize=%s&page=%s&from=%s&to=%s&sortBy=%s&apiKey=%s',
+                     mysources,q,q_title,page_size,page,from,to,
+                     sort_by, api_key)
+      eve <- read_json(req)
+      if(eve[['totalResults']] == 0){
+        print('Sorry, your research did not provide any result. 
+              Please modify your search parameters')
+      }
+      else{
+        eve <- eve[["articles"]]
+        eve <- replace_null(eve)
+        dat <- matrix(NA,length(eve), 9)
+  
+        for(i in 1:length(eve)){
+          dat[i,] <- unlist(eve[[i]])
+        }
+
+        title <- dat %>% as.data.frame()
+        colnames(title) <- c("ID","Name","Author","Title","Description",
+                            "URL","URLToImage","Date","Content") 
+        title <- title %>% separate(Date, sep = "T", 
+                                    into = c("Date", "Time2")) %>%
+         mutate(Time = str_extract(Time2, "\\d{2}:\\d{2}:\\d{2}"))%>%
+         select(-Time2, )
+        title$Title <- paste0("<a href='",title$URL,"' target='_blank'>",title$Title,"</a>") 
+        # Added hyperlink from original function
+ return(title)
+      }
+    }
+#   #     #     #     #     #     #     #     #     #     #       #   
+     # Output
+    output$HistoricPanel <- DT::renderDataTable({
+      DT::datatable(get_historic(from = min(input$dates), 
+                                 to = max(input$dates),
+                   q=input$q3,q_title=input$qInTitle,
+                   sources=input$Sources3,
+                   page_size=input$pageSize3, page=input$page3,
+                   sort_by=input$sortBy,api_key=input$API_Key3) %>% 
+          select(Name, Author, Title, Date, Time), escape = FALSE)})
+    
+     })
+  }
+  })
+}
+
+# Calling Shiny App
+shinyApp(ui, server)
+    
+```
+
